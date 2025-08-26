@@ -1,366 +1,237 @@
-# 🤖 AI Agent Demo Project
+# ADK Agent Development Project
 
-## 🚀 Quick Start
+A collection of intelligent agents built with Google's Agent Development Kit (ADK), featuring security analysis, MCP integrations, and sequential processing pipelines.
 
-### 1. **Prerequisites**
+## Project Structure
+
+```
+AgentDemo/
+├── agent_mcp/              # Basic MCP integration example
+├── agent_security/         # Security-focused code analysis agent
+├── agent_time_weather/     # Time and weather information agent
+├── agent_virus_mcp/        # VirusTotal MCP integration
+├── Sequential_agents/      # Basic sequential agent pipeline
+├── Sequential_agents_mcp/  # Sequential pipeline with MCP security tools
+├── dockerfile              # Docker container setup
+├── docker-compose.yaml     # Container orchestration
+└── README.md              # This file
+```
+
+## Quick Start (Docker - Recommended)
+
+### 1. Run with Docker Compose
 ```bash
-# Install uv (Python package manager)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Clone or navigate to project directory
+cd AgentDemo
 
-# Install Node.js (for MCP servers)
-# Download from: https://nodejs.org/ (version 16+)
+# Start all services
+docker-compose up --build
+
+# Run in background
+docker-compose up -d --build
+
+# Access the web interface
+open http://localhost:8000
 ```
 
-### 2. **Clone & Setup Project**
+### 2. Using Individual Agents
+
+Once the container is running, you can access different agents through the web interface:
+
+- **Sequential_agents**: Basic code writing → review → refactoring pipeline
+- **Sequential_agents_mcp**: Enhanced pipeline with Semgrep security analysis
+- **agent_security**: Specialized security code review agent
+- **agent_virus_mcp**: File and URL security scanning via VirusTotal
+- **agent_time_weather**: Time and weather information utilities
+
+## Alternative Setup (Manual Installation)
+
+### Prerequisites
 ```bash
-git clone git@git.fpt.net:csoc/codedeckdemo/ai-agent-demo.git
-cd ai-agent-demo
+# Install Python 3.11+
+python --version
+
+# Install ADK
+pip install google-adk python-dotenv mcp
+
+# Optional: Install security tools
+pip install uv
+uv tool install semgrep-mcp
 ```
 
-### 3. **Setup Virtual Environment**
+### Run Agents
 ```bash
-# Create and activate virtual environment
-uv venv
-source .venv/bin/activate  # Linux/Mac
-# .venv\Scripts\activate   # Windows
+# Navigate to project directory
+cd AgentDemo
+
+# Start ADK web interface
+adk web --host 0.0.0.0 --port 8000
+
+# Access at http://localhost:8000
 ```
 
-### 4. **Install Dependencies**
+## Agent Capabilities
+
+### Security Analysis Pipeline (Sequential_agents_mcp)
+- **Code Generation**: Creates Python code from requirements
+- **Security Scanning**: Uses Semgrep MCP for vulnerability detection
+- **Code Review**: Identifies security issues, code quality problems
+- **Automated Fixes**: Refactors code to resolve identified issues
+
+**Detects**: SQL injection, XSS, command injection, hard-coded secrets, path traversal, and 5,000+ other security patterns.
+
+### VirusTotal Integration (agent_virus_mcp)
+- **File Scanning**: Upload files for malware analysis
+- **URL Checking**: Verify website safety and reputation
+- **IP Analysis**: Check IP addresses against threat databases
+- **Domain Reports**: Comprehensive domain security information
+
+### Basic Utilities
+- **Weather Agent**: Current weather and forecasts
+- **Time Agent**: Time zone conversions and scheduling
+- **Security Agent**: General security best practices review
+
+## Configuration
+
+### Environment Variables
+Create a `.env` file in the project root:
+
 ```bash
-# Install Google ADK
-uv pip install google-adk
+GOOGLE_API_KEY=your_api_key_here
+GOOGLE_GENAI_USE_VERTEXAI=FALSE
 
-# Install MCP packages (for filesystem agent)
-npm install -g @modelcontextprotocol/server-filesystem
-npm install -g @burtthecoders/mcp-virustotal
+# Optional: Semgrep App Token for enhanced features
+SEMGREP_APP_TOKEN=your_token_here
+
+# Optional: VirusTotal API Key
+VIRUSTOTAL_API_KEY=your_api_key_here
 ```
 
-### 5. **Configure Environment**
+### Docker Environment
+The Docker setup automatically configures:
+- Python 3.11 runtime
+- Node.js for MCP server support
+- ADK framework and dependencies
+- Semgrep MCP tools via uvx
+- All required system dependencies
+
+## Usage Examples
+
+### Test Security Analysis
+Try this prompt with Sequential_agents_mcp:
+
+```
+Create a Python Flask web application with user login that:
+1. Connects to MySQL database with hardcoded password
+2. Accepts username/password and queries database directly  
+3. Has file upload functionality
+4. Includes API keys in source code
+5. Runs system commands based on user input
+```
+
+Expected output: Detection of SQL injection, hard-coded credentials, command injection, and secure refactored code.
+
+### Test VirusTotal Integration
+Use agent_virus_mcp to:
+- Upload suspicious files for analysis
+- Check URLs before visiting
+- Verify IP addresses and domains
+- Get comprehensive threat intelligence reports
+
+## Development
+
+### Adding New Agents
+1. Create new directory: `agent_name/`
+2. Add `agent.py` with root_agent definition
+3. Restart Docker container or ADK service
+4. Agent appears in web interface automatically
+
+### MCP Integration
+Agents support Model Context Protocol for external tool integration:
+- Semgrep for security analysis
+- VirusTotal for threat detection
+- Custom MCP servers via SSE or stdio
+
+### Debugging
 ```bash
-# Copy environment template
-cp .env.template .env
+# View container logs
+docker-compose logs -f
 
-# Edit .env and add your API keys
-nano .env  # or use your preferred editor
+# Access container shell
+docker exec -it adk-dev bash
+
+# Check MCP tools
+uvx semgrep-mcp --help
+
+# Test connections
+curl https://mcp.semgrep.ai/sse
 ```
 
-### 6. **Run Your First Agent**
+## Troubleshooting
+
+### Common Issues
+
+**Port 8000 already in use:**
 ```bash
-# Run MCP Filesystem Agent
-adk web --app_name agent_mcp
-
-# Open browser to: http://localhost:8000
+# Change port in docker-compose.yaml
+ports:
+  - "8001:8000"
 ```
 
-## ⚙️ Configuration
-
-### **📁 Environment Variables**
-
-Create a `.env` file in your project root:
-
-```env
-# 🔑 REQUIRED - Google AI API Key
-GOOGLE_API_KEY=your_google_ai_api_key_here
-
-# 🛡️ VirusTotal API Key (for security agent)
-VIRUSTOTAL_API_KEY=your_virustotal_api_key_here
-
-# 🌐 OPTIONAL - Additional APIs
-SHODAN_API_KEY=your_shodan_api_key_here
-OPENWEATHER_API_KEY=your_openweather_api_key_here
-
-# 📍 Location Settings
-DEFAULT_CITY=Hanoi
-DEFAULT_TIMEZONE=Asia/Ho_Chi_Minh
-```
-
-### **🔑 API Keys Guide**
-
-| Service         | URL                                                     | Cost     | Purpose           |
-| --------------- | ------------------------------------------------------- | -------- | ----------------- |
-| **Google AI**   | [Get API Key](https://makersuite.google.com/app/apikey) | Free     | LLM functionality |
-| **VirusTotal**  | [Get API Key](https://www.virustotal.com/gui/my-apikey) | Free     | Malware scanning  |
-
-
-## 🛠️ Available Agents
-
-### **📁 agent_mcp - MCP Filesystem Agent**
-
-**Chức năng:** Quản lý files và folders thông qua Model Context Protocol
-
-**Features:**
-- 📂 List directory contents
-- 📖 Read file contents
-- ✏️ Write/create files
-- 🔍 Search files by pattern
-- 🗂️ Navigate directory structure
-
-**Usage:**
+**MCP tools not working:**
 ```bash
-adk web --app_name agent_mcp
+# Rebuild container with clean cache
+docker-compose down
+docker-compose up --build --force-recreate
 ```
 
-**Demo Commands:**
+**Agent not found:**
+```bash
+# Ensure agent.py has root_agent defined
+# Check file structure matches expected format
+# Verify container volume mounts
 ```
-"List files in the current directory"
-"Read the content of README.md"
-"Search for all Python files"
-"Create a new file called test.txt"
-"Show directory structure"
-```
+
+### Performance Tips
+- Use `.dockerignore` to exclude unnecessary files
+- Mount only required directories in docker-compose
+- Enable MCP_DEBUG=true for connection troubleshooting
+- Monitor container resource usage for large projects
+
+## Security Features
+
+### Built-in Protections
+- Container isolation for MCP server processes
+- Environment variable management for API keys
+- Network restrictions for external MCP connections
+- Input validation and sanitization in agents
+
+### Security Analysis Capabilities
+- **Static Analysis**: 5,000+ Semgrep security rules
+- **Vulnerability Detection**: CWE-mapped security issues
+- **Code Quality**: PEP 8 compliance and best practices
+- **Threat Intelligence**: VirusTotal integration for files/URLs
+
+## Support
+
+- **ADK Documentation**: https://google.github.io/adk-docs/
+- **Semgrep Rules**: https://semgrep.dev/r
+- **MCP Protocol**: https://spec.modelcontextprotocol.io/
+- **Issues**: Create issues for bugs or feature requests
 
 ---
 
-### **🛡️ agent_security - Security Analysis Agent**
-
-**Chức năng:** Phân tích bảo mật toàn diện cho URLs, files, domains và IP addresses
-
-**Features:**
-- 🔍 URL malware/phishing scanning
-- 🗂️ File hash reputation analysis
-- 🌐 Domain security assessment
-- 🌍 IP address reputation check
-- 🚨 Multi-source threat intelligence
-
-**APIs Used:**
-- VirusTotal API (malware detection)
-- Shodan API (network analysis) - Optional
-
-**Usage:**
+**Quick Commands Reference:**
 ```bash
-adk web --app_name agent_security
+# Start development environment
+docker-compose up -d
+
+# Access web UI
+open http://localhost:8000
+
+# View logs
+docker-compose logs -f
+
+# Stop services  
+docker-compose down
 ```
-
-**Demo Commands:**
-```
-"Scan this URL for malware: https://example.com"
-"Check file hash: d41d8cd98f00b204e9800998ecf8427e"
-"Analyze domain reputation: github.com"
-"Check IP address: 8.8.8.8"
-"Comprehensive security analysis for: suspicious-site.com"
-```
-
----
-
-### **🌤️ agent_time_weather - Time & Weather Agent**
-
-**Chức năng:** Cung cấp thông tin thời gian và thời tiết cho Hà Nội
-
-**Features:**
-- 🕒 Current time in Vietnam timezone
-- 🌡️ Weather information for Hanoi
-- 📅 Date and time formatting
-- 🌍 Timezone conversion
-
-**Usage:**
-```bash
-adk web --app_name agent_time_weather
-```
-
-**Demo Commands:**
-```
-"What time is it in Hanoi?"
-"How's the weather in Hanoi today?"
-"Show me current date and time"
-"What's the temperature in Hanoi?"
-```
-
----
-
-### **📋 ai-agent-demo - Template Agent**
-
-**Chức năng:** Template và starting point cho việc tạo agents mới
-
-**Features:**
-- 🏗️ Basic agent structure
-- 📝 Example functions
-- 🔧 Configuration templates
-- 📚 Documentation examples
-
-## 📋 Project Structure
-
-```
-ai-agent-demo/
-├── 📁 ai-agent-demo/           # Template agent
-│   ├── 🐍 .venv/              # Python virtual environment
-│   └── 📄 agent.py            # Template agent code
-├── 📁 agent_mcp/              # MCP Filesystem Agent
-│   ├── 🐍 __pycache__/        # Python cache
-│   ├── ⚙️ .env                # Agent-specific config
-│   └── 📄 agent.py            # MCP filesystem agent
-├── 📁 agent_security/         # Security Analysis Agent
-│   ├── 🐍 __pycache__/        # Python cache
-│   ├── ⚙️ .env                # Security agent config
-│   └── 📄 agent.py            # Security analysis agent
-├── 📁 agent_time_weather/     # Time & Weather Agent
-│   ├── 🐍 __pycache__/        # Python cache
-│   └── 📄 agent.py            # Time/weather agent
-├── 📄 README.md               # This documentation
-├── 🔒 .gitignore             # Git ignore patterns
-└── ⚙️ .env                   # Global environment config
-```
-
-## 🔧 Development Guide
-
-### **Creating a New Agent**
-
-1. **Create Agent Directory**
-```bash
-mkdir agent_your_feature
-cd agent_your_feature
-```
-
-2. **Create Agent File**
-```bash
-touch agent.py
-```
-
-3. **Basic Agent Template**
-```python
-import os
-from google.adk.agents import Agent
-
-def your_function(input_text: str) -> dict:
-    """Your custom function."""
-    return {
-        "status": "success",
-        "report": f"Processed: {input_text}"
-    }
-
-# Create the agent
-root_agent = Agent(
-    name="your_feature_agent",
-    model="gemini-2.0-flash",
-    description="Description of your agent's capabilities",
-    instruction="""You are a helpful agent that can:
-    - Do specific task A
-    - Handle specific task B  
-    - Process specific task C
-    
-    Always be helpful and provide clear responses.""",
-    tools=[your_function],
-)
-```
-
-4. **Test Your Agent**
-```bash
-adk web --app_name agent_your_feature
-```
-
-### **Adding MCP Integration**
-
-```python
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioConnectionParams, StdioServerParameters
-
-# Add MCP toolset
-mcp_toolset = MCPToolset(
-    connection_params=StdioConnectionParams(
-        server_params=StdioServerParameters(
-            command='npx',
-            args=["-y", "your-mcp-package", "config-args"]
-        ),
-    ),
-)
-
-# Include in agent tools
-root_agent = Agent(
-    # ... other config
-    tools=[your_function, mcp_toolset],
-)
-```
-
-### **Adding API Integration**
-
-```python
-import requests
-import os
-
-API_KEY = os.getenv('YOUR_API_KEY')
-
-def api_function(query: str) -> dict:
-    """Call external API."""
-    try:
-        response = requests.get(
-            'https://api.example.com/endpoint',
-            params={'q': query},
-            headers={'Authorization': f'Bearer {API_KEY}'}
-        )
-        return {
-            "status": "success",
-            "data": response.json()
-        }
-    except Exception as e:
-        return {
-            "status": "error", 
-            "error_message": str(e)
-        }
-```
-
-## 🚨 Troubleshooting
-
-### **Common Issues & Solutions**
-
-**❌ Import Error: No module named 'google.adk'**
-```bash
-# Solution: Install Google ADK
-uv pip install google-adk
-```
-
-**❌ API Key Missing or Invalid**
-```bash
-# Check .env file
-cat .env
-# Verify API key format and permissions
-```
-
-**❌ MCP Connection Failed**
-```bash
-# Check Node.js installation
-node --version  # Should be v16+
-
-# Reinstall MCP packages
-npm install -g @modelcontextprotocol/server-filesystem
-```
-
-**❌ Permission Denied (MCP Filesystem)**
-```bash
-# Fix directory permissions
-chmod 755 /path/to/directory
-```
-
-**❌ Port Already in Use**
-```bash
-# Kill existing process
-lsof -ti:8000 | xargs kill -9
-
-# Or use different port
-adk web --app_name agent_name --port 8001
-```
-
-### **Debug Tips**
-
-1. **Check Logs**: Look at terminal output for error details
-2. **Test API Keys**: Use curl or Postman to verify API access
-3. **Verify Environment**: Ensure all environment variables are set
-4. **Browser Console**: Check for JavaScript errors
-5. **Network Issues**: Verify internet connection for API calls
-
-## 📚 Resources & Documentation
-
-### **Official Documentation**
-- [Google ADK Documentation](https://google.github.io/adk-docs/)
-- [ADK Quickstart Guide](https://google.github.io/adk-docs/get-started/quickstart/)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-
-### **API Documentation**
-- [VirusTotal API](https://developers.virustotal.com/reference/overview)
-- [Shodan API](https://developer.shodan.io/)
-- [OpenWeatherMap API](https://openweathermap.org/api)
-- [Google AI API](https://ai.google.dev/docs)
-
-### **MCP Resources**
-- [MCP Servers Collection](https://github.com/punkpeye/awesome-mcp-servers)
-- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
-- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-
-

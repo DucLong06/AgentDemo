@@ -1,0 +1,64 @@
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Verify installations
+RUN node --version && npm --version && npx --version
+
+# Set working directory
+WORKDIR /workspace
+
+# Upgrade pip and install core dependencies
+RUN pip install --upgrade pip
+
+# Install ADK and MCP dependencies
+RUN pip install google-adk python-dotenv mcp
+
+# Install uv for managing tools like semgrep-mcp
+RUN pip install uv
+
+# Install semgrep-mcp using uv (this will be available via uvx command)
+RUN uv tool install semgrep-mcp
+
+# Alternative: Install pipx and semgrep-mcp (uncomment if preferred)
+# RUN pip install pipx && \
+#     pipx install semgrep-mcp && \
+#     pipx ensurepath
+
+# Add uv tools to PATH so uvx command is available
+ENV PATH="/root/.local/bin:$PATH"
+
+# Verify semgrep-mcp installation
+RUN uvx semgrep-mcp --help || echo "Semgrep MCP will be available via uvx"
+
+# Create a startup script for flexibility
+RUN echo '#!/bin/bash\n\
+echo "🔧 Available MCP Tools:"\n\
+echo "  - Semgrep MCP: uvx semgrep-mcp"\n\
+echo "  - Remote Semgrep: https://mcp.semgrep.ai/sse"\n\
+echo ""\n\
+echo "🚀 Starting ADK Web UI..."\n\
+exec adk web --host 0.0.0.0 --port 8000' > /workspace/start.sh && \
+chmod +x /workspace/start.sh
+
+# Copy your agent code (optional, can be mounted as volume)
+# COPY . /workspace/
+
+# Set environment variables for MCP
+ENV PYTHONPATH="/workspace"
+ENV MCP_DEBUG="false"
+
+# Optional: Set Semgrep App Token (can be overridden at runtime)
+# ENV SEMGREP_APP_TOKEN=""
+
+# Expose port
+EXPOSE 8000
+
+# Use the startup script
+CMD ["/workspace/start.sh"]
