@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  adk:
+    build: .
+    container_name: adk-dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../AgentDemo:/workspace/AgentDemo
+      - ./.env:/workspace/.env
+    stdin_open: true
+    tty: true
+    working_dir: /workspace/AgentDemo
